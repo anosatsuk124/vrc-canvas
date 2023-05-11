@@ -1,0 +1,12 @@
+[package]
+name = "vrc-canvas"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.71"
+eframe = "0.21.3"
+rosc = "0.10.1"
+rust-i18n = "1.2.0"
