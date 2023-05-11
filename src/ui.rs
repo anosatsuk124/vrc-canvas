@@ -1,8 +1,10 @@
+use crate::osc::PenHandler;
 use eframe::egui;
 
 pub struct Canvas {
     canvas_size: f32,
     active_rect: egui::Rect,
+    pen_handler: PenHandler,
     preference: CanvasPreference,
 }
 
@@ -22,6 +24,7 @@ impl Default for Canvas {
                 ),
             ),
             preference,
+            pen_handler: PenHandler::default(),
         }
     }
 }
@@ -116,6 +119,12 @@ impl eframe::App for Canvas {
                     }
                 });
             });
+
+            ui.checkbox(&mut self.pen_handler.grabbed, "Grab pen");
+
+            if self.pen_handler.grabbed {
+                crate::osc::send_packet("/input/GrabRight").unwrap();
+            }
 
             ui.scope(|ui| {
                 let painter = ui.painter();
