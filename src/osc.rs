@@ -27,11 +27,11 @@ impl Default for PenHandler {
 }
 
 pub fn send_packet(addr: &str) -> Result<()> {
-    let receiver_addr = std::net::SocketAddrV4::from_str(
+    let receiver_addr = SocketAddrV4::from_str(
         format!("{}:{}", DEFAULT_IP_ADDR, DEFAULT_RECEIVER_OSC_PORT).as_str(),
     )?;
 
-    let sender_addr = std::net::SocketAddrV4::from_str(
+    let sender_addr = SocketAddrV4::from_str(
         format!("{}:{}", DEFAULT_IP_ADDR, DEFAULT_SENDER_OSC_PORT).as_str(),
     )?;
 
