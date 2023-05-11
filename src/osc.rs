@@ -35,7 +35,7 @@ pub fn send_packet(addr: &str) -> Result<()> {
         format!("{}:{}", DEFAULT_IP_ADDR, DEFAULT_SENDER_OSC_PORT).as_str(),
     )?;
 
-    let socket = UdpSocket::bind(receiver_addr)?;
+    let socket = UdpSocket::bind(sender_addr)?;
 
     let packet = rosc::OscPacket::Message(rosc::OscMessage {
         addr: addr.to_string(),
@@ -44,7 +44,7 @@ pub fn send_packet(addr: &str) -> Result<()> {
 
     let encoded_data = rosc::encoder::encode(&packet)?;
 
-    socket.send_to(encoded_data.as_slice(), sender_addr)?;
+    socket.send_to(encoded_data.as_slice(), receiver_addr)?;
 
     Ok(())
 }
