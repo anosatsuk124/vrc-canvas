@@ -1,5 +1,6 @@
 use crate::osc::PenHandler;
 use eframe::egui;
+use rust_i18n::t;
 
 pub struct Canvas {
     canvas_size: f32,
@@ -61,18 +62,26 @@ impl Canvas {
 
     pub const CANVAS_SIZE_DEFAULT: f32 = 50.0;
 
-    pub fn init_active_rect(&self, pos: egui::Pos2) -> egui::Rect {
-        egui::Rect::from_min_size(
-            pos + egui::vec2(Self::ACTIVE_RECT_MARGIN, Self::ACTIVE_RECT_MARGIN),
-            self.canvas_face(),
-        )
+    const DEFAULT_POS: egui::Pos2 = egui::pos2(0f32, 0f32);
+
+    fn init_active_rect(&self, pos: Option<egui::Pos2>) -> egui::Rect {
+        match pos {
+            Some(p) => egui::Rect::from_min_size(
+                p + egui::vec2(Self::ACTIVE_RECT_MARGIN, Self::ACTIVE_RECT_MARGIN),
+                self.canvas_face(),
+            ),
+            None => egui::Rect::from_min_size(
+                Self::DEFAULT_POS + egui::vec2(Self::ACTIVE_RECT_MARGIN, Self::ACTIVE_RECT_MARGIN),
+                self.canvas_face(),
+            ),
+        }
     }
 
-    pub fn canvas_face(&self) -> egui::Vec2 {
+    fn canvas_face(&self) -> egui::Vec2 {
         self.preference.aspect_ratio * self.canvas_size
     }
 
-    pub fn update_window_size(&mut self, frame: &mut eframe::Frame) {
+    fn update_window_size(&mut self, frame: &mut eframe::Frame) {
         let canvas_face = self.canvas_face();
 
         frame.set_window_size(egui::vec2(
@@ -84,12 +93,10 @@ impl Canvas {
 
 impl eframe::App for Canvas {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        let pos = egui::Pos2::default();
-
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.menu_button("Preference", |ui| {
+            ui.menu_button(t!("Preference.Preference"), |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Aspect Ratio: ");
+                    ui.label(format!("{}: ", t!("Preference.AspectRatio")));
                     let mut width = self.preference.aspect_ratio.x.to_string();
                     let mut height = self.preference.aspect_ratio.y.to_string();
                     ui.text_edit_singleline(&mut width);
@@ -100,31 +107,33 @@ impl eframe::App for Canvas {
                     )
                         .into();
                 });
-                ui.label(format!("Canvas Size: {}", self.canvas_size));
+                ui.label(format!(
+                    "{}: {}",
+                    t!("Preference.CanvasSize"),
+                    self.canvas_size
+                ));
                 ui.horizontal(|ui| {
-                    ui.label("Zoom ratio");
+                    ui.label(format!("{}: ", t!("Preference.ZoomRatio")));
                     ui.add(egui::Slider::new(
                         &mut self.preference.zoom_ratio,
                         0.1..=5.0,
                     ));
                     if ui.button("+").clicked() {
                         self.canvas_size *= self.preference.zoom_ratio;
-                        self.active_rect = self.init_active_rect(pos);
+                        self.active_rect = self.init_active_rect(None);
                         self.update_window_size(frame);
                     }
                     if ui.button("-").clicked() {
                         self.canvas_size /= self.preference.zoom_ratio;
-                        self.active_rect = self.init_active_rect(pos);
+                        self.active_rect = self.init_active_rect(None);
                         self.update_window_size(frame);
                     }
                 });
             });
 
-            ui.checkbox(&mut self.pen_handler.grabbed, "Grab pen");
-
-            if self.pen_handler.grabbed {
-                crate::osc::send_packet("/input/GrabRight").unwrap();
-            }
+            ui.menu_button(t!("Logs"), |ui| {
+                egui_logger::logger_ui(ui);
+            });
 
             ui.scope(|ui| {
                 let painter = ui.painter();
