@@ -8,8 +8,10 @@ use eframe::egui;
 
 rust_i18n::i18n!("locales", fallback = "en-US");
 
-fn main() -> Result<()> {
-    egui_logger::init()?;
+#[tokio::main]
+async fn main() -> Result<()> {
+    env_logger::init();
+    // egui_logger::init()?;
 
     let system_locale = if let Some(locale) = sys_locale::get_locale() {
         available_locales()

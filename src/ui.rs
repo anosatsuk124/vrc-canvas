@@ -1,11 +1,13 @@
-use crate::osc::PenHandler;
 use eframe::egui;
 use rust_i18n::t;
+
+use crate::osc::{self, pen_handle};
 
 pub struct Canvas {
     canvas_size: f32,
     active_rect: egui::Rect,
-    pen_handler: PenHandler,
+    pen_handler: Option<pen_handle::PenHandler>,
+    osc_started: bool,
     preference: CanvasPreference,
 }
 
@@ -24,8 +26,9 @@ impl Default for Canvas {
                     preference.aspect_ratio.y * Self::CANVAS_SIZE_DEFAULT,
                 ),
             ),
+            pen_handler: None,
+            osc_started: false,
             preference,
-            pen_handler: PenHandler::default(),
         }
     }
 }
@@ -51,8 +54,8 @@ impl CanvasPreference {
 
 impl Canvas {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        if let Some(storage) = cc.storage {
-            unimplemented!();
+        if let Some(_storage) = cc.storage {
+            // TODO: load preference from storage
         }
 
         Default::default()
@@ -89,6 +92,42 @@ impl Canvas {
             canvas_face.y + Self::ACTIVE_RECT_MARGIN * 2.0,
         ));
     }
+
+    pub fn from_absolute_to_relative(&self, pos: egui::Pos2) -> Option<egui::Pos2> {
+        let relative = (pos - self.active_rect.min).to_pos2();
+
+        if relative.x < 0.0 || relative.y < 0.0 {
+            return None;
+        }
+
+        Some(relative)
+    }
+
+    fn process_with_position(&mut self, pos: egui::Pos2) {
+        let handler = match pen_handle::PEN_HANDLER.get() {
+            Some(handler) => handler,
+            None => return,
+        };
+
+        let target_state = pen_handle::PenState::drawing_from_pos(pos);
+
+        let new_handler = handler.new_handler(target_state);
+        pen_handle::PEN_HANDLER.set(new_handler);
+
+        tokio::spawn(async move { handler.eval() });
+    }
+}
+
+fn get_interact_pos(input_state: &egui::InputState) -> Option<egui::Pos2> {
+    let pointer = &input_state.pointer;
+    let is_down = pointer.any_down();
+    let is_moving = pointer.is_moving();
+
+    if !is_down || !is_moving {
+        return None;
+    }
+
+    pointer.interact_pos()
 }
 
 impl eframe::App for Canvas {
@@ -135,6 +174,10 @@ impl eframe::App for Canvas {
                 egui_logger::logger_ui(ui);
             });
 
+            if ui.button(t!("Start")).clicked() {
+                self.osc_started = true;
+            }
+
             ui.scope(|ui| {
                 let painter = ui.painter();
                 painter.rect_stroke(
@@ -142,6 +185,27 @@ impl eframe::App for Canvas {
                     egui::Rounding::default(),
                     egui::Stroke::new(1.0, egui::Color32::WHITE),
                 );
+
+                if let Some(interact_pos) = ctx.input(get_interact_pos) {
+                    painter.circle_stroke(
+                        interact_pos,
+                        5.0,
+                        egui::Stroke::new(1.0, egui::Color32::WHITE),
+                    );
+
+                    let relative_pos = self.from_absolute_to_relative(interact_pos);
+                    if let Some(relative_pos) = relative_pos {
+                        if self.osc_started {
+                            let state = pen_handle::PenState::drawing_from_pos(relative_pos);
+                            if let Err(e) = osc::start_osc(state) {
+                                log::error!("Failed to start osc: {}", e);
+                                self.osc_started = false;
+                            }
+                        }
+                        log::info!("Position in active rect: {:?}", relative_pos);
+                        self.process_with_position(relative_pos);
+                    }
+                };
             });
         });
     }
