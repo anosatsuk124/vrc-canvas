@@ -48,10 +48,10 @@ impl OscHandler {
     }
 }
 
-pub fn start_osc(current_state: pen_handle::PenState) -> Result<()> {
+pub fn start_osc(current_state: Option<pen_handle::PenState>) -> Result<()> {
     OscHandler::init_hadler()?;
 
-    pen_handle::PenHandler::init(current_state)?;
+    pen_handle::PenHandler::init(None)?;
 
     Ok(())
 }

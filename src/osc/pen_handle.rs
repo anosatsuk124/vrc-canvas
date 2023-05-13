@@ -4,7 +4,7 @@ use crate::osc;
 use anyhow::Result;
 use rosc::OscType;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct PenHandler {
     target_state: PenState,
     current_state: PenState,
@@ -15,6 +15,12 @@ pub struct PenHandler {
 pub enum PenState {
     Idle(f32, f32),
     Drawing(f32, f32),
+}
+
+impl Default for PenState {
+    fn default() -> Self {
+        Self::Idle(0.0, 0.0)
+    }
 }
 
 impl PenState {
@@ -47,8 +53,8 @@ impl PenHandler {
         }
     }
 
-    pub fn init(current_state: PenState) -> Result<()> {
-        match PEN_HANDLER.set(Self::new(current_state, None)) {
+    pub fn init(current_state: Option<PenState>) -> Result<()> {
+        match PEN_HANDLER.set(Self::default()) {
             Ok(_) => Ok(()),
             Err(e) => anyhow::bail!("failed to init pen handler: {:?}", e),
         }

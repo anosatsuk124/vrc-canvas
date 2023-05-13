@@ -176,6 +176,10 @@ impl eframe::App for Canvas {
 
             if ui.button(t!("Start")).clicked() {
                 self.osc_started = true;
+                if let Err(e) = osc::start_osc(None) {
+                    log::error!("Failed to start osc: {}", e);
+                    self.osc_started = false;
+                }
             }
 
             ui.scope(|ui| {
@@ -195,13 +199,6 @@ impl eframe::App for Canvas {
 
                     let relative_pos = self.from_absolute_to_relative(interact_pos);
                     if let Some(relative_pos) = relative_pos {
-                        if self.osc_started {
-                            let state = pen_handle::PenState::drawing_from_pos(relative_pos);
-                            if let Err(e) = osc::start_osc(state) {
-                                log::error!("Failed to start osc: {}", e);
-                                self.osc_started = false;
-                            }
-                        }
                         log::info!("Position in active rect: {:?}", relative_pos);
                         self.process_with_position(relative_pos);
                     }
