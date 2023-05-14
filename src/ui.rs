@@ -1,3 +1,4 @@
+use anyhow::Result;
 use eframe::egui;
 use rust_i18n::t;
 
@@ -103,18 +104,23 @@ impl Canvas {
         Some(relative)
     }
 
-    fn process_with_position(&mut self, pos: egui::Pos2) {
+    fn process_with_position(&mut self, pos: egui::Pos2) -> Result<()> {
         let handler = match pen_handle::PEN_HANDLER.get() {
             Some(handler) => handler,
-            None => return,
+            None => return Err(anyhow::anyhow!("PenHandler is not initialized")),
         };
 
         let target_state = pen_handle::PenState::drawing_from_pos(pos);
 
-        let new_handler = handler.new_handler(target_state);
-        pen_handle::PEN_HANDLER.set(new_handler);
+        tokio::spawn(async move {
+            let mut handler = handler.lock().await;
 
-        tokio::spawn(async move { handler.eval() });
+            let new_handler = handler.new_handler(target_state);
+            *handler = new_handler;
+
+            *handler = handler.eval().await;
+        });
+        Ok(())
     }
 }
 
@@ -200,7 +206,7 @@ impl eframe::App for Canvas {
                     let relative_pos = self.from_absolute_to_relative(interact_pos);
                     if let Some(relative_pos) = relative_pos {
                         log::info!("Position in active rect: {:?}", relative_pos);
-                        self.process_with_position(relative_pos);
+                        self.process_with_position(relative_pos).unwrap();
                     }
                 };
             });
