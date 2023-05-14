@@ -72,8 +72,8 @@ impl PenHandler {
 }
 
 impl PenHandler {
-    const MOV_PREFIX: &str = "/move_";
-    const ON_MOVING: &str = "/on_moving";
+    const MOV_PREFIX: &str = "/Pen_";
+    const ON_MOVING: &str = "/Pen_Enabled";
 
     const RIGHT: &str = "right";
     const LEFT: &str = "left";
@@ -119,11 +119,11 @@ impl PenHandler {
         let speed = self.speed;
 
         osc::send_packet(
-            format!("{}x", Self::MOV_PREFIX).as_str(),
+            format!("{}X", Self::MOV_PREFIX).as_str(),
             vec![OscType::Float(pos.0 / 100.0)],
         )?;
         osc::send_packet(
-            format!("{}y", Self::MOV_PREFIX).as_str(),
+            format!("{}Y", Self::MOV_PREFIX).as_str(),
             vec![OscType::Float(pos.1 / 100.0)],
         )?;
 
