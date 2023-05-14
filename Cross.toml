@@ -2,7 +2,7 @@
 pre-build = ["apt-get update && apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev -y"]
 
 [target.aarch64-apple-darwin]
-post-build = ["cargo bundle"]
+post-build = ["cargo bundle --release"]
 
 [target.x86_64-apple-darwin]
-post-build = ["cargo bundle"]
+post-build = ["cargo bundle --release"]

@@ -13,23 +13,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            bundle_dir: linux
-            artifact_name: VRCCanvas.deb
+            artifact_name: bundle/linux/VRCCanvas.deb
             asset_name: VRCCanvas_x86_64-unknown-linux-gnu.deb
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
-            bundle_dir: windows
-            artifact_name: VRCCanvas.exe
+            artifact_name: vrc-canvas.exe
             asset_name: VRCCanvas_x86_64-pc-windows-gnu.exe
           - os: macos-latest
             target: aarch64-apple-darwin
-            bundle_dir: osx
-            artifact_name: VRCCanvas.app
+            artifact_name: bundle/osx/VRCCanvas.app
             asset_name: VRCCanvas_aarch64-apple-darwin.app
           - os: macos-latest
             target: x86_64-apple-darwin
-            bundle_dir: osx
-            artifact_name: VRCCanvas.app
+            artifact_name: bundle/osx/VRCCanvas.app
             asset_name: VRCCanvas_x86_64-apple-darwin.app
 
     runs-on: ${{ matrix.os }}
@@ -63,7 +59,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.1.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.target }}/release/bundle/${{ matrix.bundle_dir }}/${{ matrix.artifact_name }}
+          file: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
