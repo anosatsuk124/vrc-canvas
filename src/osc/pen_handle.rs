@@ -119,11 +119,11 @@ impl PenHandler {
         let speed = self.speed;
 
         osc::send_packet(
-            format!("{}_x", Self::MOV_PREFIX).as_str(),
+            format!("{}x", Self::MOV_PREFIX).as_str(),
             vec![OscType::Float(pos.0)],
         )?;
         osc::send_packet(
-            format!("{}_y", Self::MOV_PREFIX).as_str(),
+            format!("{}y", Self::MOV_PREFIX).as_str(),
             vec![OscType::Float(pos.1)],
         )?;
 
