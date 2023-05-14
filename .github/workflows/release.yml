@@ -52,28 +52,37 @@ jobs:
 
       - name: Cross build with all features
         uses: actions-rs/cargo@v1
+        if: ${{ matrix.target }} == 'x86_64-pc-windows-gnu'
         with:
           use-cross: true 
           command: build
           args: --release --target ${{ matrix.target }} --all-features
 
+      - name: Cross build with all features
+        uses: actions-rs/cargo@v1
+        if: ${{ matrix.target }} != 'x86_64-pc-windows-gnu'
+        with:
+          command: bundle
+          args: --release --target ${{ matrix.target }} --all-features
+
+
       - name: Compress binaries
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            gzip target/release/bundle/deb/*.deb > target/release/${{ matrix.artifact_name }}
+            bash -c "gzip target/release/bundle/deb/*.deb > target/release/${{ matrix.artifact_name }}"
           fi
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            zip target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe
+            bash -c "zip target/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe"
           fi
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            zip target/release/${{ matrix.artifact_name }} target/release/bundle/osx/*.app
+            bash -c "zip target/release/${{ matrix.artifact_name }} target/release/bundle/osx/*.app"
           fi
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.1.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
