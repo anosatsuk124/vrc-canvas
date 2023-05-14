@@ -1,5 +1,10 @@
+use std::borrow;
+
 use anyhow::Result;
-use eframe::egui;
+use eframe::{
+    egui::{self, FontData, FontDefinitions},
+    epaint::FontFamily,
+};
 use rust_i18n::t;
 
 use crate::osc::{self, pen_handle};
@@ -55,6 +60,24 @@ impl CanvasPreference {
 
 impl Canvas {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut fonts = FontDefinitions::default();
+
+        const NOTO_SANS: &[u8] = include_bytes!("../fonts/NotoSansJP-Regular.ttf");
+        const DEFAULT_FONT_NAME: &str = "Noto Sans JP";
+
+        let noto_sans = FontData::from_static(NOTO_SANS);
+        fonts
+            .font_data
+            .insert(DEFAULT_FONT_NAME.to_owned(), noto_sans);
+
+        fonts
+            .families
+            .get_mut(&FontFamily::Proportional)
+            .unwrap()
+            .insert(0, DEFAULT_FONT_NAME.to_owned());
+
+        cc.egui_ctx.set_fonts(fonts);
+
         if let Some(_storage) = cc.storage {
             // TODO: load preference from storage
         }
