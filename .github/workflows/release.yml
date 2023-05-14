@@ -69,20 +69,20 @@ jobs:
       - name: Compress binaries
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            bash -c "gzip target/release/bundle/deb/*.deb > target/release/${{ matrix.artifact_name }}"
+            bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ matrix.artifact_name }}"
           fi
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            bash -c "zip target/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe"
+            bash -c "zip target/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe"
           fi
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            bash -c "zip target/release/${{ matrix.artifact_name }} target/release/bundle/osx/*.app"
+            bash -c "zip target/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
           fi
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.1.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
+          file: target/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
