@@ -2,8 +2,37 @@
 name = "vrc-canvas"
 version = "0.1.0"
 edition = "2021"
+description = "An OSC tool to draw with sylus in VRChat."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.bundle]
+name = "VRCCanvas"
+identifier = "dev.anosatsuk124.vrccanvas"
+# icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
+# resources = ["assets", "images/**/*.png", "secrets/public_key.txt"]
+version = "0.1.0"
+copyright = """
+Copyright 2023- Satsuki Akiba
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+category = "Game"
+short_description = "An OSC tool to draw with sylus in VRChat."
+long_description = """
+"""
+deb_depends = [ "libxcb-render0-dev", "libxcb-shape0-dev", "libxcb-xfixes0-dev", "libxkbcommon-dev", "libssl-dev" ]
+osx_url_schemes = ["dev.anosatsuk124.vrccanvas"]
 
 [dependencies]
 anyhow = "1.0.71"

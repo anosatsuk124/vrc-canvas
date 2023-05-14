@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Release binary
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bundle_dir: linux
+            artifact_name: VRCCanvas.deb
+            asset_name: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-pc-windows-gnu
+            bundle_dir: windows
+            artifact_name: VRCCanvas.exe
+            asset_name: x86_64-pc-windows-gnu.exe
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bundle_dir: osx
+            artifact_name: VRCCanvas.app
+            asset_name: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            bundle_dir: osx
+            artifact_name: VRCCanvas.app
+            asset_name: x86_64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-bundle to bundle binaries.
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true 
+          command: install
+          args: cargo-bundle --verbose
+
+      - name: Cross build with all features
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true 
+          command: bundle
+          args: --release --target ${{ matrix.target }} --all-features --verbose
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.1.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.target }}/release/bundle/${{ matrix.bundle_dir }}/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
