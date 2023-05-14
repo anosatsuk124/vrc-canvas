@@ -52,7 +52,7 @@ jobs:
 
       - name: Cross build with all features
         uses: actions-rs/cargo@v1
-        if: ${{ matrix.target }} == 'x86_64-pc-windows-gnu'
+        if: matrix.target == 'x86_64-pc-windows-gnu'
         with:
           use-cross: true 
           command: build
@@ -60,7 +60,7 @@ jobs:
 
       - name: Cross build with all features
         uses: actions-rs/cargo@v1
-        if: ${{ matrix.target }} != 'x86_64-pc-windows-gnu'
+        if: matrix.target != 'x86_64-pc-windows-gnu'
         with:
           command: bundle
           args: --release --target ${{ matrix.target }} --all-features
