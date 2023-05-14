@@ -13,19 +13,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: bundle/linux/VRCCanvas.deb
-            asset_name: VRCCanvas_x86_64-unknown-linux-gnu.deb
+            artifact_name: vrc-canvas_amd64.deb.gz
+            asset_name: VRCCanvas_x86_64-unknown-linux-gnu.deb.gz
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: vrc-canvas.exe
-            asset_name: VRCCanvas_x86_64-pc-windows-gnu.exe
+            artifact_name: vrc-canvas.exe.zip
+            asset_name: VRCCanvas_x86_64-pc-windows-gnu.zip
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: bundle/osx/VRCCanvas.app
-            asset_name: VRCCanvas_aarch64-apple-darwin.app
+            artifact_name: VRCCanvas.app.zip
+            asset_name: VRCCanvas_aarch64-apple-darwin.zip
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: bundle/osx/VRCCanvas.app
+            artifact_name: VRCCanvas.app.zip
             asset_name: VRCCanvas_x86_64-apple-darwin.app
 
     runs-on: ${{ matrix.os }}
@@ -56,6 +56,18 @@ jobs:
           use-cross: true 
           command: build
           args: --release --target ${{ matrix.target }} --all-features
+
+      - name: Compress binaries
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
+            gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          fi
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            zip target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe
+          fi
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            zip target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/bundle/osx/*.app
+          fi
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.1.1
