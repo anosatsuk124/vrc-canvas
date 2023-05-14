@@ -60,13 +60,13 @@ jobs:
       - name: Compress binaries
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+            gzip target/release/bundle/deb/*.deb > target/release/${{ matrix.artifact_name }}
           fi
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
             zip target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe
           fi
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            zip target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/bundle/osx/*.app
+            zip target/release/${{ matrix.artifact_name }} target/release/bundle/osx/*.app
           fi
 
       - name: Upload binaries to release
