@@ -129,7 +129,7 @@ impl PenHandler {
 
         log::info!("Is moving to {:?}", pos);
 
-        osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(true)])?;
+        // osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(true)])?;
 
         // TODO: Check if the position is reached
 
