@@ -22,6 +22,9 @@ pub struct OscHandler {
 
 pub static OSC_HANDLER: once_cell::sync::OnceCell<OscHandler> = once_cell::sync::OnceCell::new();
 
+pub const CANVAS_UPDATE_LATENCY_DEFAULT: std::time::Duration =
+    std::time::Duration::from_millis(100);
+
 impl OscHandler {
     pub fn init_hadler() -> Result<()> {
         let sender_addr = SocketAddrV4::from_str(
@@ -52,6 +55,14 @@ pub fn start_osc(current_state: Option<pen_handle::PenState>) -> Result<()> {
     OscHandler::init_hadler()?;
 
     pen_handle::PenHandler::init(None)?;
+
+    tokio::spawn(async {
+        loop {
+            let handler = pen_handle::PEN_HANDLER.get().unwrap().lock().await;
+            handler.eval().await;
+            tokio::time::sleep(CANVAS_UPDATE_LATENCY_DEFAULT).await;
+        }
+    });
 
     Ok(())
 }

@@ -104,21 +104,23 @@ impl Canvas {
         Some(relative)
     }
 
-    fn process_with_position(&mut self, pos: egui::Pos2) -> Result<()> {
+    fn update_target_state(&mut self, pos: Option<egui::Pos2>) -> Result<()> {
         let handler = match pen_handle::PEN_HANDLER.get() {
             Some(handler) => handler,
             None => return Err(anyhow::anyhow!("PenHandler is not initialized")),
         };
 
-        let target_state = pen_handle::PenState::drawing_from_pos(pos);
-
         tokio::spawn(async move {
             let mut handler = handler.lock().await;
-
-            let new_handler = handler.new_handler(target_state);
-            *handler = new_handler;
-
-            *handler = handler.eval().await;
+            match pos {
+                Some(pos) => {
+                    let target_state = Some(pen_handle::PenState::drawing_from_pos(pos));
+                    *handler = handler.set_target_state(target_state);
+                }
+                None => {
+                    *handler = handler.set_target_state(None);
+                }
+            };
         });
         Ok(())
     }
@@ -129,7 +131,7 @@ fn get_interact_pos(input_state: &egui::InputState) -> Option<egui::Pos2> {
     let is_down = pointer.any_down();
     let is_moving = pointer.is_moving();
 
-    if !is_down || !is_moving {
+    if !is_down {
         return None;
     }
 
@@ -181,10 +183,13 @@ impl eframe::App for Canvas {
             });
 
             if ui.button(t!("Start")).clicked() {
-                self.osc_started = true;
-                if let Err(e) = osc::start_osc(None) {
-                    log::error!("Failed to start osc: {}", e);
-                    self.osc_started = false;
+                if !self.osc_started {
+                    self.osc_started = true;
+
+                    if let Err(e) = osc::start_osc(None) {
+                        log::error!("Failed to start osc: {}", e);
+                        self.osc_started = false;
+                    }
                 }
             }
 
@@ -206,9 +211,12 @@ impl eframe::App for Canvas {
                     let relative_pos = self.from_absolute_to_relative(interact_pos);
                     if let Some(relative_pos) = relative_pos {
                         log::info!("Position in active rect: {:?}", relative_pos);
-                        self.process_with_position(relative_pos).unwrap();
+                        self.update_target_state(Some(relative_pos))
+                            .unwrap_or_default();
                     }
-                };
+                } else if self.osc_started {
+                    self.update_target_state(None).unwrap_or_default();
+                }
             });
         });
     }

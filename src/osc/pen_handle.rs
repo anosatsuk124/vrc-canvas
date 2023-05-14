@@ -8,7 +8,7 @@ pub static PEN_HANDLER: once_cell::sync::OnceCell<sync::Mutex<PenHandler>> =
 
 #[derive(Debug, Clone, Copy)]
 pub struct PenHandler {
-    target_state: PenState,
+    target_state: Option<PenState>,
     current_state: PenState,
     speed: f32,
 }
@@ -22,7 +22,7 @@ pub enum PenState {
 impl Default for PenHandler {
     fn default() -> Self {
         Self {
-            target_state: PenState::default(),
+            target_state: None,
             current_state: PenState::default(),
             speed: 1000.0,
         }
@@ -53,7 +53,7 @@ impl PenState {
 
 impl PenHandler {
     pub fn new(current_state: PenState, speed: Option<f32>) -> Self {
-        let target_state = current_state;
+        let target_state = None;
         let speed = speed.unwrap_or(0.0);
 
         Self {
@@ -80,15 +80,9 @@ impl PenHandler {
     const UP: &str = "up";
     const DOWN: &str = "down";
 
-    pub fn new_handler(&self, target_state: PenState) -> PenHandler {
-        let mut new_handler = (*self).clone();
-        new_handler.set_target_state(target_state);
-
-        new_handler
-    }
-
-    fn set_target_state(&mut self, state: PenState) {
-        self.target_state = state;
+    pub fn set_target_state(mut self, target_state: Option<PenState>) -> Self {
+        self.target_state = target_state;
+        self
     }
 
     fn set_current_state(&mut self, state: PenState) {
@@ -101,9 +95,13 @@ impl PenHandler {
     }
 
     fn calc_delta(&self) -> (f32, f32) {
-        let targegt_position = match self.target_state {
-            PenState::Idle(x, y) => (x, y),
-            PenState::Drawing(x, y) => (x, y),
+        let targegt_position = if let Some(targegt_position) = self.target_state {
+            match targegt_position {
+                PenState::Idle(x, y) => (x, y),
+                PenState::Drawing(x, y) => (x, y),
+            }
+        } else {
+            return (0.0, 0.0);
         };
 
         let current_position = match self.current_state {
@@ -117,69 +115,61 @@ impl PenHandler {
         )
     }
 
-    async fn _mov_to(&self, dst: &str, time: f32) -> Result<()> {
+    async fn _mov_to(&self, pos: (f32, f32)) -> Result<()> {
         let speed = self.speed;
 
         osc::send_packet(
-            format!("{}{dst}", Self::MOV_PREFIX).as_str(),
-            vec![OscType::Float(speed)],
+            format!("{}_x", Self::MOV_PREFIX).as_str(),
+            vec![OscType::Float(pos.0)],
         )?;
-        log::info!("Is moving to {}", dst);
+        osc::send_packet(
+            format!("{}_y", Self::MOV_PREFIX).as_str(),
+            vec![OscType::Float(pos.1)],
+        )?;
+
+        log::info!("Is moving to {:?}", pos);
+
         osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(true)])?;
 
-        tokio::time::sleep(tokio::time::Duration::from_secs_f32(time)).await;
-
-        osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(false)])?;
-        log::info!("Has moved to {}", dst);
+        // TODO: Check if the position is reached
 
         Ok(())
     }
 
     async fn mov(&self) -> Result<()> {
-        let delta = self.calc_delta();
-
-        let time = (delta.0.powi(2) + delta.1.powi(2)).sqrt() / self.speed;
+        let target_posiotion = if let Some(target_state) = self.target_state {
+            match target_state {
+                PenState::Idle(x, y) => (x, y),
+                PenState::Drawing(x, y) => (x, y),
+            }
+        } else {
+            return Ok(());
+        };
+        // let delta = self.calc_delta();
 
         log::info!("Is changing the state into: {:?}", self.target_state);
-        log::info!("Time: {:?}", time);
 
-        if delta.0 > 0.0 {
-            self._mov_to(Self::RIGHT, time).await?;
-        }
-
-        if delta.0 < 0.0 {
-            self._mov_to(Self::LEFT, time).await?;
-        }
-
-        if delta.1 > 0.0 {
-            self._mov_to(Self::UP, time).await?;
-        }
-
-        if delta.1 < 0.0 {
-            self._mov_to(Self::DOWN, time).await?;
-        }
-
+        self._mov_to(target_posiotion).await?;
         log::info!("Has changed the state into: {:?}", self.target_state);
 
         Ok(())
     }
 
-    pub async fn eval(&self) -> PenHandler {
-        let mut newer_handler = (*self).clone();
+    pub async fn eval(self) {
+        let mut newer_handler = self;
 
-        if self.target_state == newer_handler.current_state {
-            return newer_handler;
+        if self.target_state == Some(newer_handler.current_state) {
+            return;
         }
 
         match self.mov().await {
             Ok(_) => {
-                newer_handler.set_current_state(self.target_state);
-
-                newer_handler
+                if let Some(target_state) = self.target_state {
+                    newer_handler.set_current_state(target_state);
+                }
             }
             Err(e) => {
                 log::error!("Failed to move with: {}", e);
-                newer_handler
             }
         }
     }
