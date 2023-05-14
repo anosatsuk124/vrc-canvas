@@ -129,7 +129,7 @@ impl PenHandler {
 
         tokio::time::sleep(tokio::time::Duration::from_secs_f32(time)).await;
 
-        osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(true)])?;
+        osc::send_packet(Self::ON_MOVING, vec![OscType::Bool(false)])?;
         log::info!("Has moved to {}", dst);
 
         Ok(())
@@ -140,7 +140,7 @@ impl PenHandler {
 
         let time = (delta.0.powi(2) + delta.1.powi(2)).sqrt() / self.speed;
 
-        log::info!("Is moving to target position: {:?}", self.target_state);
+        log::info!("Is changing the state into: {:?}", self.target_state);
         log::info!("Time: {:?}", time);
 
         if delta.0 > 0.0 {
@@ -159,7 +159,7 @@ impl PenHandler {
             self._mov_to(Self::DOWN, time).await?;
         }
 
-        log::info!("Has moved to target position.");
+        log::info!("Has changed the state into: {:?}", self.target_state);
 
         Ok(())
     }
