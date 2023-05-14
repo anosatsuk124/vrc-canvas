@@ -120,11 +120,11 @@ impl PenHandler {
 
         osc::send_packet(
             format!("{}x", Self::MOV_PREFIX).as_str(),
-            vec![OscType::Float(pos.0)],
+            vec![OscType::Float(pos.0 / 100.0)],
         )?;
         osc::send_packet(
             format!("{}y", Self::MOV_PREFIX).as_str(),
-            vec![OscType::Float(pos.1)],
+            vec![OscType::Float(pos.1 / 100.0)],
         )?;
 
         log::info!("Is moving to {:?}", pos);
