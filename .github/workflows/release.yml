@@ -1,12 +1,6 @@
 name: Release
 
 on:
-  ## TODO:
-  ##  workflow_dispatch:
-  ##    inputs:
-  ##      tag:
-  ##        description: 'Tag to create a release'
-  ##        required: true
   push:
     tags:
       - '*'
@@ -22,6 +16,7 @@ jobs:
     name: Release binary
     strategy:
       matrix:
+        asset_prefix: VRCCanvas
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -35,8 +30,6 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             asset_suffix: .zip
-    env:
-      asset_prefix: VRCCanvas
 
     runs-on: ${{ matrix.os }}
 
@@ -103,16 +96,16 @@ jobs:
 
       - name: Show the build result
         run: |
-          echo "# ${{ matrix.target }}} build result:" >> ${GITHUB_STEP_SUMMARY}
-          echo "" >> ${GITHUB_STEP_SUMMARY}
-          echo "```bash" >> ${GITHUB_STEP_SUMMARY}
-          tre -s target/ -E ".+/(incremental|deps|build)/"  >> ${GITHUB_STEP_SUMMARY}
-          echo "```" >> ${GITHUB_STEP_SUMMARY}
+          echo "# ${{ matrix.target }}} build result:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "```bash" >> "$GITHUB_STEP_SUMMARY"
+          tre -s target/ -E ".+/(incremental|deps|build)/"  >> "$GITHUB_STEP_SUMMARY"
+          echo "```" >> "$GITHUB_STEP_SUMMARY"
 
      - name: Set the asset name
        run: |
          echo "version=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")" >> "$GITHUB_ENV"
-         echo "asset_name=${{ env.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
+         echo "asset_name=${{ matrix.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
 
       # Compressing the release binaries or bundles in order to upload them as a single file.
       - name: Compress binaries
