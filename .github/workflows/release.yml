@@ -19,13 +19,13 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            asset_name: .deb.gz
+            asset_suffix: .deb.gz
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
-            asset_name: .zip
+            asset_suffix: .zip
           - os: macos-latest
             target: aarch64-apple-darwin
-            asset_name: .zip
+            asset_suffix: .zip
           - os: macos-latest
             target: x86_64-apple-darwin
             asset_suffix: .zip
@@ -105,23 +105,29 @@ jobs:
           tre -s target/ -E ".+/(incremental|deps|build)/"  >> "$GITHUB_STEP_SUMMARY"
           echo "${MD_CODEBLOCK}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Set the asset name
+      - name: Set the release version
         run: |
           echo "version=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")" >> "$GITHUB_ENV"
+
+      - name: Set the asset name
+        run: |
           echo "asset_name=${{ env.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
 
       # Compressing the release binaries or bundles in order to upload them as a single file.
       - name: Compress binaries
+        if: endsWith(matrix.target, '-linux-gnu')
         run: |
-          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ env.asset_name }}"
-          fi
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/*.exe"
-          fi
-          if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
-          fi
+          bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ env.asset_name }}"
+
+      - name: Compress binaries
+        if: endsWith(matrix.target, '-windows-gnu')
+        run: |
+          bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/*.exe"
+
+      - name: Compress binaries
+        if: endsWith(matrix.target, '-apple-darwin')
+        run: |
+          bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
 
       # Uploading the release binaries or bundles to the release page.
       - name: Upload binaries to release
