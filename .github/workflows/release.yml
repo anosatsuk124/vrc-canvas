@@ -19,20 +19,18 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: vrc-canvas_amd64.deb.gz
-            asset_name: VRCCanvas_${{ github.ref }}_x86_64-unknown-linux-gnu.deb.gz
+            asset_name: .deb.gz
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: vrc-canvas.exe.zip
-            asset_name: VRCCanvas_${{ github.ref }}_x86_64-pc-windows-gnu.zip
+            asset_name: .zip
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: VRCCanvas.app.zip
-            asset_name: VRCCanvas_${{ github.ref }}_aarch64-apple-darwin.zip
+            asset_name: .zip
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: VRCCanvas.app.zip
-            asset_name: VRCCanvas_${{ github.ref }}_x86_64-apple-darwin.zip
+            asset_suffix: .zip
+    env:
+      asset_prefix: VRCCanvas
 
     runs-on: ${{ matrix.os }}
 
@@ -88,18 +86,39 @@ jobs:
           command: bundle
           args: --release --target ${{ matrix.target }} --all-features
 
+      # Showing the build result.
+
+      # Installing `tre` command to show the build result.
+      - name: Install tre command
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: tre
+
+      - name: Show the build result
+        run: |
+          echo "# ${{ matrix.target }}} build result:" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "```bash" >> ${GITHUB_STEP_SUMMARY}
+          tre -s target/ -E ".+/(incremental|deps|build)/"  >> ${GITHUB_STEP_SUMMARY}
+          echo "```" >> ${GITHUB_STEP_SUMMARY}
+
+     - name: Set the asset name
+       run: |
+         echo "version=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")" >> "$GITHUB_ENV"
+         echo "asset_name=${{ env.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
 
       # Compressing the release binaries or bundles in order to upload them as a single file.
       - name: Compress binaries
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ matrix.artifact_name }}"
+            bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ env.asset_name }}"
           fi
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            bash -c "zip target/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/*.exe"
+            bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/*.exe"
           fi
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            bash -c "zip target/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
+            bash -c "zip target/${{ env.asset_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
           fi
 
       # Uploading the release binaries or bundles to the release page.
@@ -107,7 +126,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.1.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
+          file: target/${{ env.asset_name }}
+          asset_name: ${{ env.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
