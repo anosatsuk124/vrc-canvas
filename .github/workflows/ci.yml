@@ -52,7 +52,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
 
       - name: Install stable toolchain (when `matrix.cross` is `false`).
-        if: !${{ matrix.cross }}
+        if: ! ${{ matrix.cross }}
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
