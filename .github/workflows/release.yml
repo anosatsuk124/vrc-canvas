@@ -58,7 +58,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
 
       - name: "Install stable toolchain (when `matrix.cross` is `false`)."
-        if: ! ${{ matrix.cross }}
+        if: (! ${{ matrix.cross }})
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -68,13 +68,13 @@ jobs:
       # Caching the build cache to reduce the compilation time (when `matrix.cross` is `false`).
       # This project uses `cross` to compile to non-native targets. And this action not supported. It's why there's nothing effective even if it uses it.
       - name: "Rust Cache (when `matrix.cross` is `false`)."
-        if: ! ${{ matrix.cross }}
+        if: (! ${{ matrix.cross }})
         uses: Swatinem/rust-cache@v2.3.0
 
       # Installing cargo-bundle to bundle binaries.
       # FIXME: cargo-bundle is not supported using with `cross` command. So it couldn't bundle Windows' msi on linux.
       - name: Install cargo-bundle to bundle binaries.
-        if: ! endsWith(matrix.target, '-windows-gnu') || ! ${{ matrix.cross }}
+        if: (! endsWith(matrix.target, '-windows-gnu') || ! ${{ matrix.cross }})
         uses: actions-rs/cargo@v1
         with:
           command: install
@@ -92,7 +92,7 @@ jobs:
       # Building the release bundle for the target-specific format with `cargo-bundle` command natively on x86_64-linu.
       - name: "Build and Bundle deps with all features (when the target is not Windows). (without `cross`)"
         uses: actions-rs/cargo@v1
-        if: ! endsWith(matrix.target, '-windows-gnu') && ! ${{ matrix.cross }}
+        if: (! endsWith(matrix.target, '-windows-gnu') && ! ${{ matrix.cross }})
         with:
           command: bundle
           args: --release --target ${{ matrix.target }} --all-features
@@ -101,7 +101,7 @@ jobs:
       # NOTE: `cargo-bundle` should be invoked in `cross` container as the cargo runner command. It needs to be defined in `Cross.toml` as a runner.
       - name: "Build and Bundle deps with all features (when the target is not Windows). (with `cross`)"
         uses: actions-rs/cargo@v1
-        if: ! endsWith(matrix.target, '-windows-gnu') && ${{ matrix.cross }}
+        if: (! endsWith(matrix.target, '-windows-gnu') && ${{ matrix.cross }})
         with:
           use-cross: true 
           command: run
