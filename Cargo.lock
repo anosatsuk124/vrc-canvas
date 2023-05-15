@@ -1857,9 +1857,8 @@ dependencies = [
 
 [[package]]
 name = "rust-i18n"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "169fbf8f663e7bef4cddc3e0af0c350c4f8e8c1c40a1d92cdaa266865d2a749a"
+version = "1.2.1-alpha.0"
+source = "git+https://github.com/anosatsuk124/rust-i18n.git?branch=fix-globerror#e7be7882cc10fa18fdba4347b1ef32050736c94f"
 dependencies = [
  "anyhow",
  "clap",
@@ -1878,8 +1877,7 @@ dependencies = [
 [[package]]
 name = "rust-i18n-extract"
 version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec44568e2cdf4bfb7a62381bbc6fcdf0a27c60cd503dfa12c59e6c17cf3177fa"
+source = "git+https://github.com/anosatsuk124/rust-i18n.git?branch=fix-globerror#e7be7882cc10fa18fdba4347b1ef32050736c94f"
 dependencies = [
  "anyhow",
  "ignore",
@@ -1896,8 +1894,7 @@ dependencies = [
 [[package]]
 name = "rust-i18n-macro"
 version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17107229a36fc4d21a868b4d5dce9f85ea7cffacb5d210a15e57c85ab7935703"
+source = "git+https://github.com/anosatsuk124/rust-i18n.git?branch=fix-globerror#e7be7882cc10fa18fdba4347b1ef32050736c94f"
 dependencies = [
  "glob",
  "once_cell",
@@ -1913,8 +1910,7 @@ dependencies = [
 [[package]]
 name = "rust-i18n-support"
 version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e6bbf2d058c3558bef952564ceb9afcb19631cde22b47dc44f436e62ecfb916"
+source = "git+https://github.com/anosatsuk124/rust-i18n.git?branch=fix-globerror#e7be7882cc10fa18fdba4347b1ef32050736c94f"
 dependencies = [
  "glob",
  "once_cell",
