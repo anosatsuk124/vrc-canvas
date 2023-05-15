@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - '*'
-## TODO:
-##workflow_dispatch:
-##  inputs:
-##    tag:
-##      description: 'Tag to create a release'
-##      required: true
 
 jobs:
   build:
