@@ -97,11 +97,11 @@ jobs:
 
       - name: Show the build result
         run: |
-          echo "# ${{ matrix.target }}} build result:" >> ${GITHUB_STEP_SUMMARY}
-          echo "" >> ${GITHUB_STEP_SUMMARY}
-          echo "```bash" >> ${GITHUB_STEP_SUMMARY}
-          tre -s target/ -E ".+/(incremental|deps|build)/"  >> ${GITHUB_STEP_SUMMARY}
-          echo "```" >> ${GITHUB_STEP_SUMMARY}
+          echo "# ${{ matrix.target }}} build result:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "```bash" >> "$GITHUB_STEP_SUMMARY"
+          tre -s target/ -E ".+/(incremental|deps|build)/"  >> "$GITHUB_STEP_SUMMARY"
+          echo "```" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set the asset name
         run: |
