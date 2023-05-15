@@ -56,8 +56,10 @@ jobs:
           override: true
           target: ${{ matrix.target }}
 
-      # Caching the build cache to reduce the compilation time.
+      # Caching the build cache to reduce the compilation time (without Windows).
+      # I use `cross` to compile to Windows from other runners. And it's not supported. It's why there's nothing effective even if it uses it.
       - name: Rust Cache
+        if: matrix.target != 'x86_64-pc-windows-gnu'
         uses: Swatinem/rust-cache@v2.3.0
 
       # Installing cargo-bundle to bundle binaries.
