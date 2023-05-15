@@ -1,6 +1,12 @@
 name: Release
 
 on:
+  ## TODO:
+  ##  workflow_dispatch:
+  ##    inputs:
+  ##      tag:
+  ##        description: 'Tag to create a release'
+  ##        required: true
   push:
     tags:
       - '*'
@@ -14,38 +20,58 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: vrc-canvas_amd64.deb.gz
-            asset_name: VRCCanvas_x86_64-unknown-linux-gnu.deb.gz
+            asset_name: VRCCanvas_${{ matrix.os }}_${{ github.ref }}).deb.gz
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
             artifact_name: vrc-canvas.exe.zip
-            asset_name: VRCCanvas_x86_64-pc-windows-gnu.zip
+            asset_name: VRCCanvas_${{ matrix.os }}_${{ github.ref }}.zip
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: VRCCanvas.app.zip
-            asset_name: VRCCanvas_aarch64-apple-darwin.zip
+            asset_name: VRCCanvas_${{ matrix.os }}_${{ github.ref }}.zip
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: VRCCanvas.app.zip
-            asset_name: VRCCanvas_x86_64-apple-darwin.app
+            asset_name: VRCCanvas_${{ matrix.os }}_${{ github.ref }}.zip
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      # Caching the git-lfs repository to reduce the bandwidth usage.
       - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          lfs: true
+        uses: nschloe/action-cached-lfs-checkout@v1
 
-      - name: Install stable toolchain
+      # Installing the linux toochain because `cross` command on linux is used for Windows compilation.
+      - name: Install stable toolchain (when the target is Windows).
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: x86_64-unknown-linux-gnu
+
+      - name: Install stable toolchain (when the target is not Windows).
+        if: matrix.target != 'x86_64-pc-windows-gnu'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
           target: ${{ matrix.target }}
 
+      # Caching the build cache to reduce the compilation time.
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.3.0
 
+      # Installing cargo-bundle to bundle binaries.
+      # FIXME: cargo-bundle is not supported using with `cross` command. So it couldn't bundle Windows' msi on linux.
+      - name: Install cargo-bundle to bundle binaries.
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-bundle --verbose
+
+      # Building the release binary for Windows with all features enabled using `cross` command on linux.
       - name: Release build with all features (when the target is Windows).
         uses: actions-rs/cargo@v1
         if: matrix.target == 'x86_64-pc-windows-gnu'
@@ -54,14 +80,8 @@ jobs:
           command: build
           args: --release --target ${{ matrix.target }} --all-features
 
-      - name: Install cargo-bundle to bundle binaries.
-        if: matrix.target != 'x86_64-pc-windows-gnu'
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-bundle --verbose
-
-      - name: Cross build with all features
+      # Building the release bundle for other targets with `cargo-bundle` command.
+      - name: Release build with all features (when the target is not Windows).
         uses: actions-rs/cargo@v1
         if: matrix.target != 'x86_64-pc-windows-gnu'
         with:
@@ -69,6 +89,7 @@ jobs:
           args: --release --target ${{ matrix.target }} --all-features
 
 
+      # Compressing the release binaries or bundles in order to upload them as a single file.
       - name: Compress binaries
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
@@ -81,6 +102,7 @@ jobs:
             bash -c "zip target/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/bundle/osx/*.app"
           fi
 
+      # Uploading the release binaries or bundles to the release page.
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.1.1
         with:
