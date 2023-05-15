@@ -93,7 +93,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: install
-          args: tre
+          args: tre-command
 
       - name: Show the build result
         env:
