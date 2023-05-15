@@ -117,7 +117,7 @@ jobs:
       - name: Compress binaries
         if: endsWith(matrix.target, '-linux-gnu')
         run: |
-          bash -c "gzip target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ env.asset_name }}"
+          bash -c "gzip -c target/${{ matrix.target }}/release/bundle/deb/*.deb > target/${{ env.asset_name }}"
 
       - name: Compress binaries
         if: endsWith(matrix.target, '-windows-gnu')
