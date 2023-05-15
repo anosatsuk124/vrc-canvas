@@ -43,20 +43,23 @@ jobs:
           override: true
           target: ${{ matrix.target }}
 
-      - name: Install cargo-bundle to bundle binaries.
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true 
-          command: install
-          args: cargo-bundle --verbose
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.3.0
 
-      - name: Cross build with all features
+      - name: Release build with all features (when the target is Windows).
         uses: actions-rs/cargo@v1
         if: matrix.target == 'x86_64-pc-windows-gnu'
         with:
           use-cross: true 
           command: build
           args: --release --target ${{ matrix.target }} --all-features
+
+      - name: Install cargo-bundle to bundle binaries.
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-bundle --verbose
 
       - name: Cross build with all features
         uses: actions-rs/cargo@v1
