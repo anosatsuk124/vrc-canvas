@@ -102,10 +102,10 @@ jobs:
           tre -s target/ -E ".+/(incremental|deps|build)/"  >> "$GITHUB_STEP_SUMMARY"
           echo "```" >> "$GITHUB_STEP_SUMMARY"
 
-     - name: Set the asset name
-       run: |
-         echo "version=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")" >> "$GITHUB_ENV"
-         echo "asset_name=${{ matrix.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
+      - name: Set the asset name
+        run: |
+          echo "version=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")" >> "$GITHUB_ENV"
+          echo "asset_name=${{ matrix.asset_prefix }}-${{ matrix.target }}-${{ env.version }}${{ matrix.asset_suffix }}" >> "$GITHUB_ENV"
 
       # Compressing the release binaries or bundles in order to upload them as a single file.
       - name: Compress binaries
