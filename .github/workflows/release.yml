@@ -14,6 +14,7 @@ on:
 jobs:
   build:
     name: Release binary
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -65,11 +66,21 @@ jobs:
           override: true
           target: ${{ matrix.target }}
 
+      - name: Set `docker` as the container engine of `cross`.
+        if: ${{ matrix.cross }}
+        run: |
+          echo "CROSS_CONTAINER_ENGINE=docker" >> "$GITHUB_ENV"
+
       # Caching the build cache to reduce the compilation time (when `matrix.cross` is `false`).
       # This project uses `cross` to compile to non-native targets. And this action not supported. It's why there's nothing effective even if it uses it.
       - name: "Rust Cache (when `matrix.cross` is `false`)."
         if: (! ${{ matrix.cross }})
         uses: Swatinem/rust-cache@v2.3.0
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        if: ${{ matrix.cross }}
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
 
       # Installing cargo-bundle to bundle binaries.
       # FIXME: cargo-bundle is not supported using with `cross` command. So it couldn't bundle Windows' msi on linux.
